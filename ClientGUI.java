@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.List;
 
 public class ClientGUI extends JFrame {
-    private JTextField txtNama, txtNPM, txtTanggal;
+    private JTextField txtNama, txtNIM, txtTanggal;
     private JTextArea txtKeperluan, areaAntrian;
     private JComboBox<String> cbPrioritas, cbKategori, cbDosen, cbJam, cbMenit;
     private JCheckBox chkBooking;
@@ -91,15 +91,15 @@ public class ClientGUI extends JFrame {
         panel.add(txtNama, gbc);
         row++;
 
-        // NPM
+        // NIM
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0;
-        panel.add(new JLabel("NPM:"), gbc);
+        panel.add(new JLabel("NIM:"), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        txtNPM = new JTextField(20);
-        panel.add(txtNPM, gbc);
+        txtNIM = new JTextField(20);
+        panel.add(txtNIM, gbc);
         row++;
 
         // Prioritas
@@ -320,10 +320,10 @@ public class ClientGUI extends JFrame {
 
     private void daftarAntrian() {
         String nama = txtNama.getText().trim();
-        String npm = txtNPM.getText().trim();
+        String nim = txtNIM.getText().trim();
         String keperluan = txtKeperluan.getText().trim();
 
-        if (nama.isEmpty() || npm.isEmpty() || keperluan.isEmpty()) {
+        if (nama.isEmpty() || nim.isEmpty() || keperluan.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
             return;
         }
@@ -354,7 +354,7 @@ public class ClientGUI extends JFrame {
                 synchronized (lock) {
                     out.writeObject("DAFTAR");
                     out.writeObject(nama);
-                    out.writeObject(npm);
+                    out.writeObject(nim);
                     out.writeObject(keperluan);
                     out.writeObject(prioritas);
                     out.writeObject(kategori);
@@ -375,7 +375,7 @@ public class ClientGUI extends JFrame {
                                     "Sukses", JOptionPane.INFORMATION_MESSAGE);
 
                             txtNama.setText("");
-                            txtNPM.setText("");
+                            txtNIM.setText("");
                             txtKeperluan.setText("");
                             cbPrioritas.setSelectedIndex(0);
                             cbKategori.setSelectedIndex(0);

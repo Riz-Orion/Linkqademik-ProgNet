@@ -62,7 +62,7 @@ public class ClientHandler extends Thread {
     private synchronized void handleDaftar() {
         try {
             String nama = (String) in.readObject();
-            String npm = (String) in.readObject();
+            String nim = (String) in.readObject();
             String keperluan = (String) in.readObject();
             String prioritas = (String) in.readObject();
             String kategori = (String) in.readObject();
@@ -70,7 +70,7 @@ public class ClientHandler extends Thread {
             Date jadwalBooking = (Date) in.readObject();
 
             String id = "A" + System.currentTimeMillis();
-            Antrian antrian = new Antrian(id, nama, npm, keperluan, prioritas, kategori, dosen, jadwalBooking);
+            Antrian antrian = new Antrian(id, nama, nim, keperluan, prioritas, kategori, dosen, jadwalBooking);
             server.tambahAntrian(antrian);
 
             out.writeObject("SUCCESS");
