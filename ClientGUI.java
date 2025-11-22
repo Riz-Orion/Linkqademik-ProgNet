@@ -8,6 +8,8 @@ import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ClientGUI extends JFrame {
     private JTextField txtNama, txtNIM, txtTanggal;
@@ -20,9 +22,9 @@ public class ClientGUI extends JFrame {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private boolean connected = false;
-    private Object lock = new Object();
     private String myAntrianId = null;
     private int lastNotifiedPosition = -1;
+    private BlockingQueue<Object> responseQueue = new LinkedBlockingQueue<>();
 
     public ClientGUI() {
         setTitle("Mahasiswa - Pendaftaran Antrian Bimbingan");
@@ -34,7 +36,7 @@ public class ClientGUI extends JFrame {
         connectToServer();
 
         // Timer untuk auto-check posisi
-        javax.swing.Timer posisiTimer = new javax.swing.Timer(10000, e -> autoCheckPosisi());
+        javax.swing.Timer posisiTimer = new javax.swing.Timer(15000, e -> autoCheckPosisi());
         posisiTimer.start();
     }
 
@@ -160,7 +162,6 @@ public class ClientGUI extends JFrame {
         gbc.weightx = 1.0;
         JPanel dateTimePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        // Tanggal field (format: dd/MM/yyyy)
         txtTanggal = new JTextField(10);
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         txtTanggal.setText(sdf.format(new Date()));
@@ -168,18 +169,16 @@ public class ClientGUI extends JFrame {
         txtTanggal.setToolTipText("Format: dd/MM/yyyy");
         dateTimePanel.add(txtTanggal);
 
-        // Jam
         String[] jam = new String[24];
         for (int i = 0; i < 24; i++) {
             jam[i] = String.format("%02d", i);
         }
         cbJam = new JComboBox<>(jam);
         cbJam.setEnabled(false);
-        cbJam.setSelectedIndex(8); // Default 08:00
+        cbJam.setSelectedIndex(8);
         dateTimePanel.add(cbJam);
         dateTimePanel.add(new JLabel(":"));
 
-        // Menit
         String[] menit = { "00", "15", "30", "45" };
         cbMenit = new JComboBox<>(menit);
         cbMenit.setEnabled(false);
@@ -270,6 +269,7 @@ public class ClientGUI extends JFrame {
             in = new ObjectInputStream(socket.getInputStream());
             connected = true;
 
+            // Thread untuk menerima semua data dari server
             new Thread(() -> {
                 try {
                     while (connected) {
@@ -279,37 +279,34 @@ public class ClientGUI extends JFrame {
                             if (obj instanceof String) {
                                 String msg = (String) obj;
                                 if (msg.equals("UPDATE")) {
+                                    // Ini adalah broadcast update
                                     Object nextObj = in.readObject();
                                     if (nextObj instanceof List) {
                                         List<Antrian> list = (List<Antrian>) nextObj;
                                         updateAntrianDisplay(list);
                                     }
+                                } else {
+                                    // Ini adalah response untuk request
+                                    responseQueue.put(obj);
                                 }
-                            } else if (obj instanceof List) {
-                                List<Antrian> list = (List<Antrian>) obj;
-                                updateAntrianDisplay(list);
+                            } else {
+                                // Response object langsung
+                                responseQueue.put(obj);
                             }
                         } catch (EOFException | SocketException e) {
-                            // Connection closed
                             break;
-                        } catch (ClassNotFoundException e) {
-                            System.err.println("Class not found: " + e.getMessage());
-                        } catch (IOException e) {
-                            System.err.println("IO Error: " + e.getMessage());
-                            break;
+                        } catch (Exception e) {
+                            System.err.println("Receiver error: " + e.getMessage());
                         }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 } finally {
                     connected = false;
                 }
             }).start();
 
-            synchronized (lock) {
-                out.writeObject("GET_LIST");
-                out.flush();
-            }
+            // Request daftar antrian awal
+            out.writeObject("GET_LIST");
+            out.flush();
 
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this,
@@ -327,6 +324,8 @@ public class ClientGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Semua field harus diisi!");
             return;
         }
+
+        btnDaftar.setEnabled(false);
 
         new Thread(() -> {
             try {
@@ -346,12 +345,15 @@ public class ClientGUI extends JFrame {
                     } catch (Exception ex) {
                         SwingUtilities.invokeLater(() -> {
                             JOptionPane.showMessageDialog(this, "Format tanggal tidak valid!");
+                            btnDaftar.setEnabled(true);
                         });
                         return;
                     }
                 }
 
-                synchronized (lock) {
+                synchronized (out) {
+                    responseQueue.clear(); // Clear queue sebelum request
+
                     out.writeObject("DAFTAR");
                     out.writeObject(nama);
                     out.writeObject(nim);
@@ -361,10 +363,15 @@ public class ClientGUI extends JFrame {
                     out.writeObject(dosen);
                     out.writeObject(jadwalBooking);
                     out.flush();
+                }
 
-                    String response = (String) in.readObject();
-                    if (response.equals("SUCCESS")) {
-                        String id = (String) in.readObject();
+                // Tunggu response dengan timeout
+                Object response = responseQueue.poll(5, java.util.concurrent.TimeUnit.SECONDS);
+
+                if (response != null && response.equals("SUCCESS")) {
+                    Object idObj = responseQueue.poll(2, java.util.concurrent.TimeUnit.SECONDS);
+                    if (idObj != null) {
+                        String id = (String) idObj;
                         myAntrianId = id;
 
                         SwingUtilities.invokeLater(() -> {
@@ -379,14 +386,24 @@ public class ClientGUI extends JFrame {
                             txtKeperluan.setText("");
                             cbPrioritas.setSelectedIndex(0);
                             cbKategori.setSelectedIndex(0);
+                            btnDaftar.setEnabled(true);
 
-                            cekPosisi();
+                            javax.swing.Timer timer = new javax.swing.Timer(500, evt -> cekPosisi());
+                            timer.setRepeats(false);
+                            timer.start();
                         });
                     }
+                } else {
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(this, "Pendaftaran gagal atau timeout!");
+                        btnDaftar.setEnabled(true);
+                    });
                 }
+
             } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
                     JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+                    btnDaftar.setEnabled(true);
                 });
             }
         }).start();
@@ -394,28 +411,23 @@ public class ClientGUI extends JFrame {
 
     private void cekPosisi() {
         if (myAntrianId == null) {
-            JOptionPane.showMessageDialog(this, "Anda belum mendaftar antrian!");
             return;
         }
 
         new Thread(() -> {
             try {
-                synchronized (lock) {
+                synchronized (out) {
+                    responseQueue.clear();
+
                     out.writeObject("GET_POSISI");
                     out.writeObject(myAntrianId);
                     out.flush();
+                }
 
-                    Object posisiObj = in.readObject();
-                    Object estimasiObj = in.readObject();
+                Object posisiObj = responseQueue.poll(3, java.util.concurrent.TimeUnit.SECONDS);
+                Object estimasiObj = responseQueue.poll(2, java.util.concurrent.TimeUnit.SECONDS);
 
-                    if (posisiObj == null || estimasiObj == null) {
-                        SwingUtilities.invokeLater(() -> {
-                            lblPosisi.setText("Error: Data tidak valid");
-                            lblEstimasi.setText("");
-                        });
-                        return;
-                    }
-
+                if (posisiObj != null && estimasiObj != null) {
                     int posisi = ((Integer) posisiObj).intValue();
                     String estimasi = (String) estimasiObj;
 
@@ -424,7 +436,6 @@ public class ClientGUI extends JFrame {
                             lblPosisi.setText("Posisi antrian Anda: " + posisi);
                             lblEstimasi.setText("Estimasi tunggu: " + estimasi);
 
-                            // Notifikasi jika tinggal 3 atau kurang
                             if (NotifikasiManager.perluNotifikasi(posisi) && posisi != lastNotifiedPosition) {
                                 NotifikasiManager.playNotification();
                                 JOptionPane.showMessageDialog(this,
@@ -435,15 +446,12 @@ public class ClientGUI extends JFrame {
                         } else {
                             lblPosisi.setText("Antrian tidak ditemukan");
                             lblEstimasi.setText("");
+                            myAntrianId = null;
                         }
                     });
                 }
-            } catch (ClassNotFoundException e) {
-                System.err.println("Class not found error: " + e.getMessage());
-                e.printStackTrace();
             } catch (Exception e) {
-                System.err.println("Error checking position: " + e.getMessage());
-                e.printStackTrace();
+                // Silent fail untuk auto check
             }
         }).start();
     }
@@ -457,18 +465,16 @@ public class ClientGUI extends JFrame {
     private void lihatStatistik() {
         new Thread(() -> {
             try {
-                synchronized (lock) {
+                synchronized (out) {
+                    responseQueue.clear();
+
                     out.writeObject("GET_STATISTIK");
                     out.flush();
+                }
 
-                    Object obj = in.readObject();
-                    if (obj == null) {
-                        SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(this, "Gagal mendapatkan statistik");
-                        });
-                        return;
-                    }
+                Object obj = responseQueue.poll(5, java.util.concurrent.TimeUnit.SECONDS);
 
+                if (obj != null) {
                     String laporan = (String) obj;
 
                     SwingUtilities.invokeLater(() -> {
@@ -485,10 +491,6 @@ public class ClientGUI extends JFrame {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                SwingUtilities.invokeLater(() -> {
-                    JOptionPane.showMessageDialog(this,
-                            "Error mendapatkan statistik: " + e.getMessage());
-                });
             }
         }).start();
     }
