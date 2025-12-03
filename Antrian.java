@@ -1,5 +1,3 @@
-
-// File: Antrian.java
 import java.io.Serializable;
 import java.util.Date;
 
@@ -8,7 +6,7 @@ public class Antrian implements Serializable {
 
     private String id;
     private String namaMahasiswa;
-    private String nim;
+    private String npm;
     private String keperluan;
     private Date waktu;
     private Date waktuSelesai;
@@ -17,13 +15,12 @@ public class Antrian implements Serializable {
     private String kategori; // "Bimbingan Skripsi", "Konsultasi Nilai", "Administrasi", "Lainnya"
     private String dosen; // Nama dosen yang dipilih
     private Date jadwalBooking; // Untuk fitur booking
-    private String catatan;
 
-    public Antrian(String id, String nama, String nim, String keperluan,
+    public Antrian(String id, String nama, String npm, String keperluan,
             String prioritas, String kategori, String dosen, Date jadwalBooking) {
         this.id = id;
         this.namaMahasiswa = nama;
-        this.nim = nim;
+        this.npm = npm;
         this.keperluan = keperluan;
         this.waktu = new Date();
         this.status = "Menunggu";
@@ -31,12 +28,11 @@ public class Antrian implements Serializable {
         this.kategori = kategori;
         this.dosen = dosen;
         this.jadwalBooking = jadwalBooking;
-        this.catatan = "";
     }
 
     // Constructor untuk backward compatibility
-    public Antrian(String id, String nama, String nim, String keperluan) {
-        this(id, nama, nim, keperluan, "Normal", "Lainnya", "Umum", null);
+    public Antrian(String id, String nama, String npm, String keperluan) {
+        this(id, nama, npm, keperluan, "Normal", "Lainnya", "Umum", null);
     }
 
     public String getId() {
@@ -47,8 +43,8 @@ public class Antrian implements Serializable {
         return namaMahasiswa;
     }
 
-    public String getNim() {
-        return nim;
+    public String getNpm() {
+        return npm;
     }
 
     public String getKeperluan() {
@@ -83,10 +79,6 @@ public class Antrian implements Serializable {
         return jadwalBooking;
     }
 
-    public String getCatatan() {
-        return catatan;
-    }
-
     public void setStatus(String status) {
         this.status = status;
         if (status.equals("Selesai")) {
@@ -96,10 +88,6 @@ public class Antrian implements Serializable {
 
     public void setWaktuSelesai(Date waktuSelesai) {
         this.waktuSelesai = waktuSelesai;
-    }
-
-    public void setCatatan(String catatan) {
-        this.catatan = catatan;
     }
 
     // Hitung durasi layanan dalam menit

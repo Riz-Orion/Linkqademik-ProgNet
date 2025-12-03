@@ -13,7 +13,7 @@ public class AdminGUI extends JFrame {
     private DefaultTableModel tableModel;
     private JTextArea logArea;
     private AntrianServer server;
-    private JButton btnLayani, btnSelesai, btnHapus, btnRefresh, btnCatatan, btnStatistik;
+    private JButton btnLayani, btnSelesai, btnHapus, btnRefresh, btnStatistik;
     private JComboBox<String> filterDosen;
     private JLabel lblTotalAntrian, lblRataRata;
 
@@ -73,7 +73,7 @@ public class AdminGUI extends JFrame {
 
         centerPanel.add(filterPanel, BorderLayout.NORTH);
 
-        String[] columns = { "No. Antrian", "Nama", "NIM", "Prioritas", "Kategori", "Dosen", "Keperluan", "Waktu",
+        String[] columns = { "No. Antrian", "Nama", "NPM", "Prioritas", "Kategori", "Dosen", "Keperluan", "Waktu",
                 "Status" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -104,7 +104,6 @@ public class AdminGUI extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnLayani = new JButton("▶ Layani");
         btnSelesai = new JButton("✓ Selesai");
-        btnCatatan = new JButton("📝 Catatan");
         btnHapus = new JButton("✗ Hapus");
         btnStatistik = new JButton("📊 Statistik");
         btnRefresh = new JButton("🔄 Refresh");
@@ -116,10 +115,6 @@ public class AdminGUI extends JFrame {
         btnSelesai.setBackground(new Color(52, 152, 219));
         btnSelesai.setForeground(Color.WHITE);
         btnSelesai.setFocusPainted(false);
-
-        btnCatatan.setBackground(new Color(241, 196, 15));
-        btnCatatan.setForeground(Color.WHITE);
-        btnCatatan.setFocusPainted(false);
 
         btnHapus.setBackground(new Color(231, 76, 60));
         btnHapus.setForeground(Color.WHITE);
@@ -135,7 +130,6 @@ public class AdminGUI extends JFrame {
 
         buttonPanel.add(btnLayani);
         buttonPanel.add(btnSelesai);
-        buttonPanel.add(btnCatatan);
         buttonPanel.add(btnHapus);
         buttonPanel.add(btnStatistik);
         buttonPanel.add(btnRefresh);
@@ -160,7 +154,6 @@ public class AdminGUI extends JFrame {
         // Event Handlers
         btnLayani.addActionListener(e -> layaniAntrian());
         btnSelesai.addActionListener(e -> selesaikanAntrian());
-        btnCatatan.addActionListener(e -> tambahCatatan());
         btnHapus.addActionListener(e -> hapusAntrian());
         btnStatistik.addActionListener(e -> tampilkanStatistik());
         btnRefresh.addActionListener(e -> updateTable());
@@ -188,7 +181,7 @@ public class AdminGUI extends JFrame {
                 Object[] row = new Object[] {
                         a.getId(),
                         a.getNamaMahasiswa(),
-                        a.getNim(),
+                        a.getNpm(),
                         a.getPrioritas(),
                         a.getKategori(),
                         a.getDosen(),
@@ -198,9 +191,6 @@ public class AdminGUI extends JFrame {
                 };
                 tableModel.addRow(row);
 
-                // Color coding berdasarkan prioritas
-                int rowIndex = tableModel.getRowCount() - 1;
-                // Note: Untuk color coding lengkap, perlu custom renderer
             }
         });
     }
@@ -224,22 +214,6 @@ public class AdminGUI extends JFrame {
             server.selesaikanAntrian(id);
             log("Antrian selesai: " + id);
             NotifikasiManager.playNotification();
-        } else {
-            JOptionPane.showMessageDialog(this, "Pilih antrian terlebih dahulu!");
-        }
-    }
-
-    private void tambahCatatan() {
-        int row = table.getSelectedRow();
-        if (row >= 0) {
-            String id = (String) tableModel.getValueAt(row, 0);
-            String catatan = JOptionPane.showInputDialog(this, "Masukkan catatan:", "Catatan",
-                    JOptionPane.PLAIN_MESSAGE);
-
-            if (catatan != null && !catatan.trim().isEmpty()) {
-                server.updateCatatan(id, catatan);
-                log("Catatan ditambahkan untuk: " + id);
-            }
         } else {
             JOptionPane.showMessageDialog(this, "Pilih antrian terlebih dahulu!");
         }

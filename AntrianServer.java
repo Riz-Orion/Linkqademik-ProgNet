@@ -1,5 +1,3 @@
-
-// File: AntrianServer.java
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -98,17 +96,6 @@ public class AntrianServer extends Thread {
             daftarAntrian.removeIf(a -> a.getId().equals(id));
         }
 
-        adminGUI.updateTable();
-        notifikasiSemuaClient();
-    }
-
-    public synchronized void updateCatatan(String id, String catatan) {
-        for (Antrian a : daftarAntrian) {
-            if (a.getId().equals(id)) {
-                a.setCatatan(catatan);
-                break;
-            }
-        }
         adminGUI.updateTable();
         notifikasiSemuaClient();
     }
