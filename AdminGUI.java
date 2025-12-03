@@ -73,7 +73,7 @@ public class AdminGUI extends JFrame {
 
         centerPanel.add(filterPanel, BorderLayout.NORTH);
 
-        String[] columns = { "No. Antrian", "Nama", "NPM", "Prioritas", "Kategori", "Dosen", "Keperluan", "Waktu",
+        String[] columns = { "No. Antrian", "Nama", "NIM", "Prioritas", "Kategori", "Dosen", "Keperluan", "Waktu",
                 "Status" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -181,7 +181,7 @@ public class AdminGUI extends JFrame {
                 Object[] row = new Object[] {
                         a.getId(),
                         a.getNamaMahasiswa(),
-                        a.getNpm(),
+                        a.getNim(),
                         a.getPrioritas(),
                         a.getKategori(),
                         a.getDosen(),

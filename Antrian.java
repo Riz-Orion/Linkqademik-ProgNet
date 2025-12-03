@@ -6,7 +6,7 @@ public class Antrian implements Serializable {
 
     private String id;
     private String namaMahasiswa;
-    private String npm;
+    private String nim;
     private String keperluan;
     private Date waktu;
     private Date waktuSelesai;
@@ -16,11 +16,11 @@ public class Antrian implements Serializable {
     private String dosen; // Nama dosen yang dipilih
     private Date jadwalBooking; // Untuk fitur booking
 
-    public Antrian(String id, String nama, String npm, String keperluan,
+    public Antrian(String id, String nama, String nim, String keperluan,
             String prioritas, String kategori, String dosen, Date jadwalBooking) {
         this.id = id;
         this.namaMahasiswa = nama;
-        this.npm = npm;
+        this.nim = nim;
         this.keperluan = keperluan;
         this.waktu = new Date();
         this.status = "Menunggu";
@@ -31,8 +31,8 @@ public class Antrian implements Serializable {
     }
 
     // Constructor untuk backward compatibility
-    public Antrian(String id, String nama, String npm, String keperluan) {
-        this(id, nama, npm, keperluan, "Normal", "Lainnya", "Umum", null);
+    public Antrian(String id, String nama, String nim, String keperluan) {
+        this(id, nama, nim, keperluan, "Normal", "Lainnya", "Umum", null);
     }
 
     public String getId() {
@@ -43,8 +43,8 @@ public class Antrian implements Serializable {
         return namaMahasiswa;
     }
 
-    public String getNpm() {
-        return npm;
+    public String getNim() {
+        return nim;
     }
 
     public String getKeperluan() {
