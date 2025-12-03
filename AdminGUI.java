@@ -41,7 +41,7 @@ public class AdminGUI extends JFrame {
         headerPanel.setBackground(new Color(41, 128, 185));
         headerPanel.setPreferredSize(new Dimension(0, 80));
 
-        JLabel lblTitle = new JLabel("SISTEM ANTRIAN BIMBINGAN DOSEN", SwingConstants.CENTER);
+        JLabel lblTitle = new JLabel("Linqademik: Sistem Antrian Bimbingan Kampus", SwingConstants.CENTER);
         lblTitle.setFont(new Font("Arial", Font.BOLD, 22));
         lblTitle.setForeground(Color.WHITE);
 

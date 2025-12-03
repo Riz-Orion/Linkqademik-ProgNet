@@ -47,7 +47,7 @@ public class ClientGUI extends JFrame {
         JPanel headerPanel = new JPanel();
         headerPanel.setBackground(new Color(52, 73, 94));
         headerPanel.setPreferredSize(new Dimension(0, 60));
-        JLabel lblTitle = new JLabel("PENDAFTARAN ANTRIAN BIMBINGAN");
+        JLabel lblTitle = new JLabel("Linqademik: Sistem Antrian Bimbingan Kampus");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
         lblTitle.setForeground(Color.WHITE);
         headerPanel.add(lblTitle);
